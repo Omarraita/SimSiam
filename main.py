@@ -132,7 +132,7 @@ if __name__ == '__main__':
     test_loader = DataLoader(test_data, batch_size=batch_size, shuffle=False, num_workers=16, pin_memory=True)
 
     '''
-    train_data = get_cardio_smclr('/content/drive/MyDrive/Robotics project I/Datasets/validation_patches_augRed.npz')
+    train_data = get_cardio_smclr('/content/drive/MyDrive/Robotics project I/Datasets/training_patches_augRed.npz')
     train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True, num_workers=16, pin_memory=True)
     memory_data = get_cardio_smclr_test('/content/drive/MyDrive/Robotics project I/Datasets/training_patches_augRed.npz')
     memory_loader = DataLoader(memory_data, batch_size=batch_size, shuffle=False, num_workers=16, pin_memory=True)
