@@ -56,7 +56,7 @@ def get_simclr_transform(size, s=1):
         data_transforms = transforms.Compose([transforms.Resize(size=size),
                                               #transforms.RandomHorizontalFlip(),
                                               #transforms.RandomApply([color_jitter], p=0.8),
-                                              #transforms.RandomGrayscale(p=0.2),
+                                              transforms.RandomGrayscale(p=0.2),
                                               GaussianBlur(kernel_size=int(0.1 * size)),
                                               transforms.ToTensor(),
                                               transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))])
