@@ -55,9 +55,9 @@ def get_simclr_transform(size, s=1):
         color_jitter = transforms.ColorJitter(0.4 * s, 0.4 * s, 0.4 * s, 0.1 * s)
         normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         data_transforms = transforms.Compose([transforms.Resize(size=size),
-                                              #transforms.RandomHorizontalFlip(),
-                                              #transforms.RandomApply([color_jitter], p=0.4),
-                                              #transforms.RandomGrayscale(p=0.4),
+                                              transforms.RandomHorizontalFlip(),
+                                              transforms.RandomApply([color_jitter], p=0.1),
+                                              transforms.RandomGrayscale(p=0.4),
                                               GaussianBlur(kernel_size=int(0.1 * size)),
                                               transforms.ToTensor(),
                                               normalize,
@@ -74,6 +74,6 @@ def load_data(file_path):
 
 def get_cardio_smclr(train_file):
     
-    train_data = CardioSimCLRDataset(train_file, transform = ContrastiveLearningViewGenerator(get_simclr_transform(224), 2))
+    train_data = CardioSimCLRDataset(train_file, transform = ContrastiveLearningViewGenerator(get_simclr_transform(36), 2))
     
     return train_data
