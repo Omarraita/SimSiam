@@ -1,77 +1,50 @@
+import numpy as np
+from skimage.filters import frangi
+from skimage.color import rgb2gray
 from torchvision.transforms import transforms
-from torchvision import datasets
-from torch.utils.data import Dataset, DataLoader
-from gaussian_blur import GaussianBlur
-from view_generator import ContrastiveLearningViewGenerator
-import numpy as np 
+import matplotlib.pyplot as plt
 import torch
-from PIL import Image
 
-class CardioSimCLRDataset(Dataset):
-    
-    """Dataset of images. Returns unlabelled dataset for contrastive learning"""
-    def __init__(self, npz_file, transform=None, to_tensor=False, to_normalize = False):
-        """
-        Args:
-            npz_file (string): Path to the npz file with patches and labels.
-            transform (callable, optional): Optional transform to be applied
-                on a sample.
-        """
-        self.patches, self.labels = load_data(npz_file)
-        self.transform = transform
-        self.tensor = to_tensor
-        self.norm = to_normalize
+np.random.seed(0)
 
-    def __len__(self):
-        return len(self.labels)
 
-    def __getitem__(self, idx):
-        if torch.is_tensor(idx):
-            idx = idx.tolist()
+class ContrastiveLearningViewGenerator(object):
+    """Take two random crops of one image as the query and key."""
+
+    def __init__(self, base_transform, n_views=2):
+        self.base_transform = base_transform
+        self.n_views = n_views
+
+    def __call__(self, x):
+        return [self.base_transform(x) for i in range(self.n_views)]
+
+class ContrastiveLearningFrangiGenerator(object):
+    """Take two random crops of one image as the query and key."""
+
+    def __init__(self, base_transform, n_views=2):
+        self.base_transform = base_transform
+        self.n_views = n_views
+
+    def __call__(self, x):
+
+        image = self.base_transform(x)
+        img = (np.transpose(image.cpu().detach().numpy(), (1, 2, 0))*255)
+        gray_img = rgb2gray(img)
         
-        image = self.patches[idx]
-        img = Image.fromarray(image)
-        label = np.array([self.labels[idx]])
-        
-        if self.transform is not None:
-            image = self.transform(img)
-            
-        if self.tensor==True : 
-            trsf = transforms.ToTensor()
-            image = trsf(image)/255
-            
-        if self.norm==True :         
-            trsf2 = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-            image = trsf2(image)
-            
-        label = torch.from_numpy(label)
-        
-        sample = (image, label) 
-    
-        return sample
+        plt.imsave('frame.jpg', gray_img, cmap='gray' )
 
-def get_simclr_transform(size, s=1):
-        """Return a set of data augmentation transformations as described in the SimCLR paper."""
-        color_jitter = transforms.ColorJitter(0.8 * s, 0.8 * s, 0.8 * s, 0.2 * s)
-        data_transforms = transforms.Compose([transforms.Resize(size=size),
-                                              transforms.RandomHorizontalFlip(),
-                                              transforms.RandomApply([color_jitter], p=0.8),
-                                              transforms.RandomGrayscale(p=0.2),
-                                              GaussianBlur(kernel_size=int(0.1 * size)),
-                                              transforms.ToTensor(),
-                                              transforms.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))])
-        return data_transforms
+        filtered_1 = frangi(gray_img,sigmas=range(5, 10, 5)) # gray_img is uint8 while filtered img is between 0 and 1
 
-def load_data(file_path): 
-    
-    """Load training data from file in ``.npz`` format."""
-    f = np.load(file_path, allow_pickle=True)
-    X, Y = f['X'], f['Y']
-    Y=np.squeeze(Y)
-    return (X,Y)
+        filtered_2 = frangi(gray_img,sigmas=range(5, 10, 5)) # gray_img is uint8 while filtered img is between 0 and 1
 
-def get_cardio_smclr(train_file):
-    
-    train_data = CardioSimCLRDataset(train_file, transform = ContrastiveLearningViewGenerator(get_simclr_transform(32), 2))
-    
-    return train_data
+        filtered_3 = frangi(gray_img,sigmas=range(5, 10, 5)) # gray_img is uint8 while filtered img is between 0 and 1
+        plt.imsave('filtered_1.jpg', filtered_1, cmap='gray')
+        plt.imsave('filtered_2.jpg', filtered_2, cmap='gray')
+        plt.imsave('filtered_3.jpg', filtered_3, cmap='gray')
+        filtered_1 = transforms.ToTensor()(filtered_1).float() # gray_img is uint8 while filtered img is between 0 and 1
+        filtered_2 = transforms.ToTensor()(filtered_2).float() # gray_img is uint8 while filtered img is between 0 and 1
+        filtered_3 = transforms.ToTensor()(filtered_3).float() # gray_img is uint8 while filtered img is between 0 and 1
+
+        filtered = torch.cat([filtered_1, filtered_2, filtered_3], dim=0)
+        #print(self.base_transform(x).size())
+        return [self.base_transform(x), filtered]
