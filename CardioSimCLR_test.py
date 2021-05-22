@@ -72,6 +72,6 @@ def load_data(file_path):
 
 def get_cardio_smclr_test(train_file):
     
-    train_data = CardioSimCLRDataset(train_file, transform = ContrastiveLearningViewGenerator(get_simclr_transform(32), 2))
+    train_data = CardioSimCLRDataset(train_file, transform = ContrastiveLearningViewGenerator(get_simclr_transform(96), 2))
     
     return train_data
