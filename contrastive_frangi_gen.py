@@ -21,23 +21,24 @@ class ContrastiveLearningViewGenerator(object):
 class ContrastiveLearningFrangiGenerator(object):
     """Take two random crops of one image as the query and key."""
 
-    def __init__(self, base_transform, n_views=2):
+    def __init__(self, frangi_transform, base_transform, n_views=2):
+        self.frangi_transform = frangi_transform
         self.base_transform = base_transform
         self.n_views = n_views
 
     def __call__(self, x):
 
-        image = self.base_transform(x)
+        image = self.frangi_transform(x)
         img = (np.transpose(image.cpu().detach().numpy(), (1, 2, 0))*255)
         gray_img = rgb2gray(img)
         
         plt.imsave('frame.jpg', gray_img, cmap='gray' )
 
-        filtered_1 = frangi(gray_img,sigmas=range(5, 10, 5)) # gray_img is uint8 while filtered img is between 0 and 1
+        filtered_1 = frangi(gray_img,sigmas=range(2, 5, 3)) # gray_img is uint8 while filtered img is between 0 and 1
+        #print(filtered_1)
+        filtered_2 = frangi(gray_img,sigmas=range(5, 8, 3)) # gray_img is uint8 while filtered img is between 0 and 1
 
-        filtered_2 = frangi(gray_img,sigmas=range(5, 10, 5)) # gray_img is uint8 while filtered img is between 0 and 1
-
-        filtered_3 = frangi(gray_img,sigmas=range(5, 10, 5)) # gray_img is uint8 while filtered img is between 0 and 1
+        filtered_3 = frangi(gray_img,sigmas=range(8, 12, 3)) # gray_img is uint8 while filtered img is between 0 and 1
         plt.imsave('filtered_1.jpg', filtered_1, cmap='gray')
         plt.imsave('filtered_2.jpg', filtered_2, cmap='gray')
         plt.imsave('filtered_3.jpg', filtered_3, cmap='gray')
